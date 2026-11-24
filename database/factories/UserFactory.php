@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Actions\Schools\AddSchoolMember;
+use App\Enums\SchoolRole;
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -41,5 +44,23 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function platformAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_platform_admin' => true,
+        ]);
+    }
+
+    public function memberOf(School $school, SchoolRole $role = SchoolRole::Teacher): static
+    {
+        return $this->afterCreating(function (User $user) use ($school, $role): void {
+            app(AddSchoolMember::class)->handle($school, [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $role,
+            ]);
+        });
     }
 }
