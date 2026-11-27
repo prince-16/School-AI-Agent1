@@ -36,6 +36,15 @@
                         @can('viewAny', App\Models\AcademicYear::class)
                             <a href="{{ route('academic-years.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">Academic years</a>
                         @endcan
+                        @can('viewAny', App\Models\Student::class)
+                            <a href="{{ route('students.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">Students</a>
+                        @endcan
+                        @can('viewAny', App\Models\SchoolClass::class)
+                            <a href="{{ route('classes.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">Classes</a>
+                        @endcan
+                        @can('viewAny', App\Models\StaffProfile::class)
+                            <a href="{{ route('staff.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">Staff</a>
+                        @endcan
                         @can('viewAny', App\Models\SchoolMembership::class)
                             <a href="{{ route('members.index') }}" class="rounded-md px-3 py-1.5 text-slate-700 hover:bg-slate-100">Members</a>
                         @endcan

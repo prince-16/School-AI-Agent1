@@ -20,6 +20,8 @@ class Dashboard extends Component
             'currentYear' => $school?->currentAcademicYear,
             'memberCount' => $school === null ? 0 : $school->memberships()->count(),
             'yearCount' => $school === null ? 0 : $school->academicYears()->count(),
+            'studentCount' => $school === null ? 0 : $school->students()->count(),
+            'classCount' => $school === null ? 0 : $school->schoolClasses()->count(),
         ]);
     }
 }

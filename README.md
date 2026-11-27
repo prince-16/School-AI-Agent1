@@ -1,58 +1,65 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# School
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel school management app. Each school’s records stay inside that school. Fees, attendance, exams, and the AI agent are later phases.
 
-## About Laravel
+This document covers what is built today. Update it when a new phase lands.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## What works now
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Create a school and open it. The header shows the open school.
+- Log in and log out. Repeated failed logins are rate limited.
+- Roles inside one school: school admin, accountant, teacher, and staff. A role in one school does not apply in another.
+- Add members, change a role, suspend a member, or remove a member. A school must keep one active administrator.
+- An existing email is attached to the school without changing that person’s password.
+- Academic years for the open school. One year is current. Dates cannot overlap, and the current year cannot be deleted until another year is current.
+- Students, parents or guardians, classes, sections, and enrollments for one academic year. A student has one enrollment per year. Roll numbers are unique inside a section.
+- Staff profiles add an employee code to an existing member. A class teacher must be an active teacher at that school.
+- A platform admin can create schools and open any school. Everyone else only opens schools they belong to.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+After you open a school, use **Academic years**, **Students**, **Classes**, **Staff**, and **Members** in the navigation. The dashboard counts belong to that school only. Creating a school does not copy years, students, or members from another school.
 
-## Learning Laravel
+## Not built yet
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Fees, attendance, exams, homework, timetables, expenses, reports, and the AI agent.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Next phase: **Fees** — fee heads, assignments, and payments, with dues calculated in PHP.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Requirements
 
-## Agentic Development
+- PHP 8.3 or newer
+- Composer
+- Node.js and npm
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+The app uses SQLite locally. Sessions, cache, and queues use the database.
+
+## Local setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer setup
+php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+php artisan migrate
+php artisan db:seed
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+`composer setup` installs PHP and npm packages, creates `.env` when it is missing, generates the app key, and builds the frontend. Seeding runs only when `APP_ENV=local`.
 
-## Contributing
+Open http://127.0.0.1:8000.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Local sample accounts
 
-## Code of Conduct
+Every seeded account uses the password `password`. These accounts are for local checking only.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Email | What they can open |
+| --- | --- |
+| `admin@school.test` | Platform admin. Can create and open every school. |
+| `meera.iyer@greenwood.test` | Greenwood High, school admin |
+| `asha.verma@riverside.test` | Riverside Public School as admin, and St. Mary's Academy as teacher |
 
-## Security Vulnerabilities
+The seeder also adds accountants, teachers, staff, and two suspended members across Greenwood High (`GWH`), Riverside Public School (`RPS`), and St. Mary's Academy (`SMA`). Greenwood High also gets Class 10, Section A (class teacher Anita Desai), students Tarun Sharma (`GWH-101`) and Abhishek Gupta (`GWH-102`) enrolled for 2026-27, guardian Ramesh Sharma, and staff profile `T-01`. Run `php artisan db:seed` again safely; it skips records that already exist.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Tests
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+```

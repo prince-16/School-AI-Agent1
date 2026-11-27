@@ -30,6 +30,16 @@ class School extends Model
         return $this->hasMany(SchoolMembership::class)->withoutGlobalScope(SchoolScope::class);
     }
 
+    public function students(): HasMany
+    {
+        return $this->hasMany(Student::class)->withoutGlobalScope(SchoolScope::class);
+    }
+
+    public function schoolClasses(): HasMany
+    {
+        return $this->hasMany(SchoolClass::class)->withoutGlobalScope(SchoolScope::class);
+    }
+
     public function academicYears(): HasMany
     {
         return $this->hasMany(AcademicYear::class)

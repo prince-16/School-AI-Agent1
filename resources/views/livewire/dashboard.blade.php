@@ -17,5 +17,13 @@
             <p class="text-sm text-slate-500">Members</p>
             <p class="mt-2 text-lg font-semibold text-slate-900">{{ $memberCount }}</p>
         </section>
+        <section class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-sm text-slate-500">Students</p>
+            <p class="mt-2 text-lg font-semibold text-slate-900">{{ $studentCount }}</p>
+        </section>
+        <section class="rounded-lg border border-slate-200 bg-white p-4">
+            <p class="text-sm text-slate-500">Classes</p>
+            <p class="mt-2 text-lg font-semibold text-slate-900">{{ $classCount }}</p>
+        </section>
     </div>
 </div>

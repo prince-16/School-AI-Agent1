@@ -3,6 +3,12 @@
 namespace Database\Seeders;
 
 use App\Actions\AcademicYears\SaveAcademicYear;
+use App\Actions\People\AttachGuardian;
+use App\Actions\People\EnrollStudent;
+use App\Actions\People\SaveSchoolClass;
+use App\Actions\People\SaveSection;
+use App\Actions\People\SaveStaffProfile;
+use App\Actions\People\SaveStudent;
 use App\Actions\Schools\AddSchoolMember;
 use App\Actions\Schools\CreateSchool;
 use App\Actions\Schools\ManageSchoolMembership;
@@ -12,6 +18,9 @@ use App\Enums\SchoolPermission;
 use App\Enums\SchoolRole;
 use App\Exceptions\SchoolRuleException;
 use App\Models\School;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Student;
 use App\Models\User;
 use App\Services\SchoolContext;
 use Illuminate\Database\Seeder;
@@ -51,6 +60,7 @@ class DemoDataSeeder extends Seeder
             $this->academicYears($school);
         }
 
+        $this->seedClassroom();
         $this->directPermissionExample();
         $this->frameworkRows();
     }
@@ -179,6 +189,136 @@ class DemoDataSeeder extends Seeder
             ]);
 
             $school->refresh();
+        }
+    }
+
+    private function seedClassroom(): void
+    {
+        $school = School::query()->where('code', 'GWH')->first();
+        $year = $school?->academicYears()->where('name', '2026-27')->first();
+
+        if ($school === null || $year === null) {
+            return;
+        }
+
+        $this->schoolContext->forSchool($school, function () use ($school, $year): void {
+            $this->seedGreenwoodClassroom($school, $year->id);
+        });
+    }
+
+    private function seedGreenwoodClassroom(School $school, int $yearId): void
+    {
+        $class = $this->ensureClass($school, '10', 10);
+        $teacher = User::query()->where('email', 'anita.desai@greenwood.test')->first();
+        $section = $this->ensureSection($school, $class->id, $yearId, 'A', $teacher?->id);
+
+        $tarun = $this->ensureStudent($school, 'GWH-101', 'Tarun', 'Sharma');
+        $abhishek = $this->ensureStudent($school, 'GWH-102', 'Abhishek', 'Gupta');
+
+        $this->ensureGuardian($tarun, 'Ramesh Sharma', 'ramesh.sharma@family.test');
+        $this->ensureEnrollment($tarun, $section->id, '1');
+        $this->ensureEnrollment($abhishek, $section->id, '2');
+
+        if ($teacher !== null) {
+            $this->ensureStaffProfile($school, $teacher->id, 'T-01', 'Teacher');
+        }
+    }
+
+    private function ensureClass(School $school, string $name, int $sortOrder): SchoolClass
+    {
+        $existing = $school->schoolClasses()->where('name', $name)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return app(SaveSchoolClass::class)->handle($school, [
+            'name' => $name,
+            'sort_order' => $sortOrder,
+        ]);
+    }
+
+    private function ensureSection(School $school, int $classId, int $yearId, string $name, ?int $teacherId): Section
+    {
+        $existing = Section::query()
+            ->where('school_class_id', $classId)
+            ->where('academic_year_id', $yearId)
+            ->where('name', $name)
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return app(SaveSection::class)->handle($school, [
+            'school_class_id' => $classId,
+            'academic_year_id' => $yearId,
+            'name' => $name,
+            'class_teacher_user_id' => $teacherId,
+        ]);
+    }
+
+    private function ensureStudent(School $school, string $admissionNumber, string $firstName, string $lastName): Student
+    {
+        $existing = $school->students()->where('admission_number', $admissionNumber)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        return app(SaveStudent::class)->handle($school, [
+            'admission_number' => $admissionNumber,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'gender' => 'male',
+        ]);
+    }
+
+    private function ensureGuardian(Student $student, string $name, string $email): void
+    {
+        try {
+            app(AttachGuardian::class)->handle($student, [
+                'name' => $name,
+                'relationship' => 'father',
+                'email' => $email,
+                'is_primary' => true,
+            ]);
+        } catch (SchoolRuleException $exception) {
+            if ($exception->getMessage() !== 'This guardian is already linked to the student.') {
+                throw $exception;
+            }
+        }
+    }
+
+    private function ensureEnrollment(Student $student, int $sectionId, string $rollNumber): void
+    {
+        try {
+            app(EnrollStudent::class)->handle($student, [
+                'section_id' => $sectionId,
+                'roll_number' => $rollNumber,
+            ]);
+        } catch (SchoolRuleException $exception) {
+            if ($exception->getMessage() !== 'This student is already enrolled in this academic year.') {
+                throw $exception;
+            }
+        }
+    }
+
+    private function ensureStaffProfile(School $school, int $userId, string $employeeCode, string $designation): void
+    {
+        try {
+            app(SaveStaffProfile::class)->handle($school, [
+                'user_id' => $userId,
+                'employee_code' => $employeeCode,
+                'designation' => $designation,
+            ]);
+        } catch (SchoolRuleException $exception) {
+            if (! in_array($exception->getMessage(), [
+                'This member already has a staff profile.',
+                'This employee code is already used.',
+            ], true)) {
+                throw $exception;
+            }
         }
     }
 

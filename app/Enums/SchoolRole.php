@@ -28,6 +28,9 @@ enum SchoolRole: string
             self::Admin => SchoolPermission::cases(),
             self::Accountant, self::Teacher, self::Staff => [
                 SchoolPermission::AcademicYearsView,
+                SchoolPermission::StudentsView,
+                SchoolPermission::ClassesView,
+                SchoolPermission::StaffView,
             ],
         };
     }
